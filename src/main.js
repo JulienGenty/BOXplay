@@ -1,26 +1,43 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { renderer, scene, resizeRendererToDisplaySize } from "./renderer";
+import { camera } from "./camera";
+import { directionalLight, ambientLight } from "./lights";
+import { MeshInstance } from "./MeshInstance";
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const player = new MeshInstance(1, 1, 1, 0xc0c0c0);
+const ground = new MeshInstance(3, 0.25, 9, 0x2f4f4f);
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setAnimationLoop(animate);
-document.body.appendChild(renderer.domElement);
+player.castShadow = true;
+player.receiveShadow = false;
+ground.castShadow = false;
+ground.receiveShadow = true;
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
+ground.position.y = -2;
 
-camera.position.z = 5;
+scene.add(player);
+scene.add(ground);
+scene.add(directionalLight);
+scene.add(ambientLight);
+
 const controls = new OrbitControls(camera, renderer.domElement);
-scene.add(controls);
 
-function animate() {
-  cube.rotation.x += 0.01;
-  cube.rotation.y += 0.01;
+function render(time) {
+  time *= 0.001;
+
+  const canvas = renderer.domElement;
+  camera.aspect = canvas.clientWidth / canvas.clientHeight;
+  camera.updateProjectionMatrix();
+
+  if (resizeRendererToDisplaySize(renderer)) {
+    const canvas = renderer.domElement;
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+  }
+
+  controls.update();
 
   renderer.render(scene, camera);
+  requestAnimationFrame(render);
 }
+requestAnimationFrame(render);
